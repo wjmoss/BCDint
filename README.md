@@ -5,7 +5,7 @@
 - "ricf_int" is an old version of BCD algorithm for interventional data  
 - "ricf_int2" is the BCD algorithm for interventional data
 
-## simulation
+## simulations
 - "generateModel" is data generation process of simulations
 - "simulationcyc" is the simulation and evaluation of one single configuration $(v.n.l.d)==(p,m,k,d)$
 
