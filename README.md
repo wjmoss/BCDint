@@ -10,4 +10,6 @@
 - **`simulationcyc`**: Runs simulation and evaluation for one configuration $(v, n, l, d) = (p, m, k, d)$
 
 ## Maximum Likelihood Degree Computation
-- **`ML_deg`**: Mathematica code to compute the maximum likelihood degrees for an example model using both observational and interventional data
+- **`ML_deg`**: Mathematica code for computing maximum likelihood degrees:
+  - One for **observational data** only
+  - One for **observational + interventional data**
