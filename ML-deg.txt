@@ -1,0 +1,51 @@
+B = {{1, 0, 0, 0}, {-b21, 1, 0, -b24}, {0, -b32, 1, 0}, {-b41, 0, -b43, 1}};
+MatrixForm[B]
+Det[B]
+W = DiagonalMatrix[{w1, w2, w3, w4}];
+
+(*int targets emptyset, {2}*)
+B1=B2=B;
+B2[[2,1]]=B2[[2,4]]=0;
+W2=W;
+W2[[2,2]]=w21;
+
+Sigma1 = Inverse[B1] . W . Transpose[Inverse[B1]];
+Sigma2=Inverse[B2] . W2 . Transpose[Inverse[B2]];
+
+p=4
+S1 = RandomInteger[100, {p, p}];
+S1 = S1+ Transpose[S1] + 150*IdentityMatrix[p];
+MatrixForm[S1]
+N[Eigenvalues[S1]]
+
+S2 = RandomInteger[100, {p, p}];
+S2 = S2+ Transpose[S2] + 150*IdentityMatrix[p];
+MatrixForm[S2]
+N[Eigenvalues[S2]]
+
+
+ell1 = Simplify[Log[Det[Sigma1]] - Tr[Inverse[Sigma1].S1]];
+ell2 = Simplify[Log[Det[Sigma2]] - Tr[Inverse[Sigma2].S2]];
+a1=RandomInteger[100]+1;
+a2=RandomInteger[100]+1;
+ell=a1*ell1+a2*ell2;
+
+G = Numerator[
+   Together[
+    Simplify[
+     D[ell, {{b21, b32, b43, b24, b41, w1, w2, w3, w4},
+       1}]]]];
+G;
+
+(*deg=9*)
+GG = GroebnerBasis[
+  Join[G, {Det[B]*t - 1, Det[B2]*t2-1}], {t, t2, w1, w2, w3, w4, b21, b24, b32,
+   b43, b41}];
+GG[[1]]
+
+(*deg=9*)
+GG = GroebnerBasis[
+  Join[G, {Det[B]*t - 1}], {t, w1, w2, w3, w4, b21, b25, b32,
+   b43, b41}];
+GG[[1]]
+
