@@ -439,11 +439,11 @@ ricf_int <- function(L = NULL, data, targets=NULL, target.length=NULL, Linit = N
   llh_temp[restarts+2] <- llh(res_temp[[restarts+2]], cov_obs)
   
   ind <- which.max(llh_temp)
-  return (list(res=res_temp, llh=llh_temp))
+  #return (list(res=res_temp, llh=llh_temp))
   return (res_temp[[ind]])
 }
 
-r=1000
-a1<- ricf_int(L=t(models[[r]]$B), data=t(models[[r]]$Y), targets=models[[r]]$targets, target.length=models[[r]]$target.length)
-View(a1)
+#r=1000
+#a1<- ricf_int(L=t(models[[r]]$B), data=t(models[[r]]$Y), targets=models[[r]]$targets, target.length=models[[r]]$target.length)
+#View(a1)
 
