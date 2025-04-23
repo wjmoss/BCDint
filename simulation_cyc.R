@@ -12,14 +12,14 @@ source("ricf_dg.R")
 # d: probability of filling an edge between two nodes
 replicates <- 1000
 V <- c(5, 10, 20)
-N <- c(1.5, 5, 10, 20)
+N <- c(2.5, 5, 10, 20)
 K <- c(0, 2, 3, 4, 8)
 D <- c(0.1, 0.2)
 
-v <- V[1]
-n <- N[3]
+v <- V[2]
+n <- N[1]
 l <- K[2]
-d <- D[2]
+d <- D[1]
 seed <- 1
 set.seed(seed)
 graphs <- list()

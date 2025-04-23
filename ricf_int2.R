@@ -243,9 +243,9 @@ ricf_int_ <- function(L = NULL, data, targets=NULL, target.length=NULL, Linit = 
   Lcur <- Linit; Ocur <- Oinit
   iter <- 1
   repeat {
-    print(iter)
-    print(Lcur)
-    print(Ocur)
+    #print(iter)
+    #print(Lcur)
+    #print(Ocur)
     if(p>1){
       for (i in 1:p) {
         if (iter > 1) {
