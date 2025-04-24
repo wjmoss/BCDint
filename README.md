@@ -20,5 +20,5 @@ A small collection of scripts for block-coordinate descent (BCD) algorithms in l
 - Not a package; just standalone scripts  
 - No installation required  
 - Core dependencies: **base R**
-- Optional (for visualization function in `generateModel.R`): **ggm**, **igraph**
+- Optional (for visualization function in `generateModel.R`): **ggm**, **BiocManager**, **graph**, **igraph**
 - For symbolic computations, copy-paste the ML_deg.txt file into a **Wolfram Engine** or **Mathematica** session
