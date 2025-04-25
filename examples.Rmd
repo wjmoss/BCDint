@@ -1,0 +1,153 @@
+---
+title: "examples"
+output: 
+  html_document:
+    css: styles.css
+date: "2025-04-25"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Examples of BCDint
+
+```{r source}
+## load the R scripts
+source("generateModel.R")
+source("ricf_int2.R")
+source("ricf_dg.R")
+```
+
+1. The 3-cycle
+  - graph visualization
+```{r plot-3-cycle}
+## The 3-cycle 1->2->3->1, 100 replicates of different parameters
+## B[i,j] is the edge j->i
+B = matrix(c(0,1,0,0,0,1,1,0,0),3,3)
+plotGraph(t(B))
+```
+
+  - data generation
+```{r 3-cycle, data generation}
+
+# v: graph size
+# n: multiple of sample size to graph size
+v = 3
+n = 10
+set.seed(1)
+replicates = 100
+models <- list()
+for (r in 1:replicates){
+  targets <- list(numeric(0))
+  target.length <- c(round(n*v))
+  targets[[2]] <- sample(v, 1)
+  target.length[2] <- max(sample(round(n*v/2), 1) + round(n*v/2),v+1)
+  models[[r]] <- generateData(B=B, Omega=diag(v), targets = targets, target.length = target.length)
+}
+```
+
+  - estimation
+```{r 3-cycle, estimation}
+## compare the results by MLE and aggeregation method
+res_int <- list()
+res_agg <- list()
+
+t0 <- proc.time()[3]
+for (r in 1:replicates){
+  # preprocess, to simplify variable names
+  # targets, target.length, data, empty matrix/vector for recording estimates
+  # count_L, count_O: sum of valid data rows for each position in zero pattern matrix/vector
+  targets <- models[[r]]$targets
+  target.length <- models[[r]]$target.length
+  data <- t(models[[r]]$Y)
+  Lhat <- count_L <- matrix(0,v,v)
+  Omegahat <- count_O <- rep(0,v)
+
+  # the zero pattern of L,O, observation case
+  # allconverged: whether all ricf in the aggregation converged
+  L0 <- t(models[[r]]$B)
+  Omega0 <- rep(1,v)
+  allconverged <- T
+  for (k in 1:length(targets)){
+    # zero pattern of intervened graphs
+    L <- L0
+    L[, targets[[k]]] <- 0
+    Omega <- Omega0
+    Omega[targets[[k]]] <- 0
+
+    # find the indices of rows in data for intervention target k
+    # assume that length(ind) > 0 always holds
+    posind <- cumsum(c(0,target.length))
+    ind <- (posind[k]+1): posind[k+1]
+    m <- length(ind)
+    S <- cov(data[ind, ])
+
+    # once ricf performing, weighted sum of Lambdahat, Omegahat * zero pattern of intervened graphs
+    # update allconverged
+    tmp <- ricf_R_dg(L=L, S=S)
+    Lhat <- Lhat + m * tmp$Lambdahat * L
+    Omegahat <- Omegahat + m * tmp$Omegahat * Omega
+    count_L <- count_L + m * L
+    count_O <- count_O + m * Omega
+    allconverged <- tmp$converged & allconverged
+  }
+
+  # weighted average of K ricf results
+  # set the zeros in counts to be 1
+  count_L <- pmax(count_L, 1)
+  count_O <- pmax(count_O, 1)
+  res_agg[[r]] <- list()
+  res_agg[[r]]$Lambdahat <- Lhat / count_L
+  res_agg[[r]]$Omegahat <- Omegahat / count_O
+  # vector * matrix is a row transformation
+  res_agg[[r]]$Sigmahat <-  t(solve((diag(v)-res_agg[[r]]$Lambdahat))) %*% (res_agg[[r]]$Omegahat * solve((diag(v)-res_agg[[r]]$Lambdahat)))
+  res_agg[[r]]$allconverged <- allconverged
+}
+t1 <- (proc.time()[3] - t0) #/ replicates
+
+t0 <- proc.time()[3]
+for (r in 1:replicates){
+  res_int[[r]] <- ricf_int_(L=t(models[[r]]$B), data=t(models[[r]]$Y), targets=models[[r]]$targets, target.length=models[[r]]$target.length)
+}
+t2 <- (proc.time()[3] - t0) #/ replicates
+```
+
+   - metrics
+```{r metrics}
+## 2 metrics: average RMSE of edge weights and variances; difference of log-likelihood (comparing to true parameters)
+rss <- function(r, List){
+  rss <- sum((t(models[[r]]$B.true)-List[[r]]$Lambdahat)^2) + sum((diag(models[[r]]$Omega.true)-List[[r]]$Omegahat)^2)
+  num <- sum(models[[r]]$B) + nrow(models[[r]]$Omega)
+  return (rss / num)
+}
+
+d_llh <- function(r, List){
+  K = (diag(v)-List[[r]]$Lambdahat) %*% (1 / List[[r]]$Omegahat * t(diag(v)-List[[r]]$Lambdahat))
+  tr <- sum( c(K) * c(t(models[[r]]$Sigmas[[1]])) )
+  llh <- - sum(log(List[[r]]$Omegahat)) + log(det(diag(v)-List[[r]]$Lambdahat) ^ 2) - tr
+  llh0 <- - sum(log(diag(models[[r]]$Omega.true))) + log(det(diag(v)-models[[r]]$B.true) ^ 2) - v
+  return (llh0 - llh)
+}
+
+rss1 = mean(sapply(1:replicates, rss, List=res_agg))
+rss2 = mean(sapply(1:replicates, rss, List=res_int))
+
+d1 = mean(sapply(1:replicates, d_llh, List=res_agg))
+d2 = mean(sapply(1:replicates, d_llh, List=res_int))
+```
+
+The results are summarized in this table.
+```{r echo=F}
+# Create a matrix with 2 rows and 3 columns
+values <- matrix(c(rss1, rss2, d1, d2, t1, t2), nrow = 2, ncol = 3)
+
+# Define row and column names
+row_names <- c("Agg", "MLE")
+col_names <- c("RMSE", "dif-llh", "time.elapsed")
+
+# Display the matrix with row and column names
+dimnames(values) <- list(row_names, col_names)
+values
+```
+

@@ -16,8 +16,8 @@ N <- c(2.5, 5, 10, 20)
 K <- c(0, 2, 3, 4, 8)
 D <- c(0.1, 0.2)
 
-v <- V[2]
-n <- N[1]
+v <- V[1]
+n <- N[3]
 l <- K[2]
 d <- D[1]
 seed <- 1
@@ -155,6 +155,14 @@ mean(sapply(1:replicates, d_llh, List=res_dg_agg))
 mean(sapply(1:replicates, d_llh, List=res_int))
 mean(sapply(1:replicates, d_llh, List=res_int2))
 
+tmp=(sapply(1:replicates, rss, List=res_int2))
+ind = which(tmp>10)
+for (r in ind){
+  print(models[[r]]$targets)
+  cat("-----------------")
+  plotGraph(models[[r]]$B)
+  Sys.sleep(10)
+}
 
 #mean(sort(sapply(1:replicates, rss, List=res_dg_agg))[1:(replicates-5)])
 #mean(sort(sapply(1:replicates, rss, List=res_int))[1:(replicates-5)])
