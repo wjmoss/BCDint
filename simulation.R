@@ -37,7 +37,7 @@ d_llh <- function(r, models, List){
   return (llh0 - llh)
 }
 
-run_vnl <- function(v, n, l, d=0.2, seed = 1, repl = 1000){
+run_vnl <- function(v, n, l, d=0.2, seed = 0, repl = 1000){
   set.seed(seed)
   graphs <- list()
   models <- list()
