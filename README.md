@@ -3,16 +3,16 @@
 A small collection of scripts for block-coordinate descent (BCD) algorithms in linear causal models for interventional data.
 
 ## Algorithms
-- **`ricf_dg.R`**: BCD algorithm (Drton et al., 2019) for directed graphs (without bidirected edges)  
-- **`ricf_int.R`**: Early version of the BCD algorithm for interventional data  
-- **`ricf_int2.R`**: Updated BCD algorithm for interventional data
+- **`ricf_dg.R`**: BCD algorithm (Drton et al., 2019), simplied version for directed graphs (without bidirected edges)  
+- **`ricf_int.R`**: Archived old version of the BCD algorithm for interventional data
+- **`ricf_int2.R`**: Current BCD algorithm for interventional data
 
 ## Simulations
 - **`generateModel.R`**: Data generation process used in simulations  
-- **`simulationcyc.R`**: Runs simulation and evaluation for one configuration $(v, n, l, d) = (p, m/p, k, d)$
+- **`simulation.R`**: Runs simulation and evaluation for one configuration $(v, n, l, d) = (p, m/p, k, d)$
 
 ## Maximum Likelihood Degree Computation
-- **`ML_deg`**: Mathematica code for computing maximum likelihood degrees:
+- **`ML-deg`**: Mathematica code for computing maximum likelihood degrees:
   - One for **observational data** only
   - One for **observational + interventional data**
 
