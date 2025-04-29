@@ -33,18 +33,28 @@ a1=RandomInteger[100]+1;
 a2=RandomInteger[100]+1;
 ell=a1*ell1+a2*ell2;
 
+
+(*observational data, ML-deg=6*)
+G = Numerator[
+   Together[
+    Simplify[
+     D[ell1, {{b21, b32, b43, b24, b41, w1, w2, w3, w4},
+       1}]]]];
+G;
+
+GG = GroebnerBasis[
+  Join[G, {Det[B]*t - 1}], {t, w1, w2, w3, w4, b21, b24, b32,
+   b43, b41}];
+GG[[1]]
+
+
+(*observational data and interventional data, deg=9*)
 G = Numerator[
    Together[
     Simplify[
      D[ell, {{b21, b32, b43, b24, b41, w1, w2, w3, w4},
        1}]]]];
 G;
-
-(*deg=9*)
-GG = GroebnerBasis[
-  Join[G, {Det[B]*t - 1}], {t, w1, w2, w3, w4, b21, b25, b32,
-   b43, b41}];
-GG[[1]]
 
 (*deg=9*)
 GG = GroebnerBasis[
