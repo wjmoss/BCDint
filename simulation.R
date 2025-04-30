@@ -10,11 +10,11 @@ source("ricf_dg.R")
 # n: multiple of sample size to graph size
 # l: length of the unique cycle
 # d: probability of filling an edge between two nodes
-replicates <- 1000
-V <- c(5, 10, 20)
-N <- c(2.5, 5, 10, 20)
-K <- c(0,2, 3, 4, 8)
-D <- c(0.2)
+repl <- 1000
+V <- c(5, 10)
+N <- c(5, 10)
+K <- c(0, 3, 4)
+D <- c(0.2, 0.3)
 
 v <- V[1]
 n <- N[3]
@@ -131,13 +131,22 @@ run_vnl <- function(v, n, l, d=0.2, seed = 0, repl = 1000){
   
   res <- matrix(c(conv_agg, conv_mle, rss_agg, rss_mle,
                   llh_agg, llh_mle, t1, t2), 2, 4)
+  filename = paste0("v=",v,"n=",n,"l=",l,"d=",d, "seed=",seed)
+  save(res, res_int, res_dg_agg, models, file=paste0("data/", filename, ".rda"))
   return (res)
 }
 
+seed = 1
 for (v in V){
   for (n in N){
     for (l in K){
-      run_vnl(v, n, l)
+      for (d in D){
+        run_vnl(v, n, l, d=d, seed=seed, repl=1000)
+        cat(v,n,l,d)
+        cat("\n")
+        #filename = paste0("v=",v,"n=",n,"l=",l,"d=",d, "seed=",seed)
+        #save(res, file=paste0("data/", filename, ".rda"))
+      }
     }
   }
 }
