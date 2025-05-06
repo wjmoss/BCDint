@@ -5,7 +5,7 @@ library(ggplot2)
 
 ## load the csv file
 # filter non-NA rows and transform time format
-df <- read.csv("4HAIE.csv", header=T, sep=";")
+df <- read.csv("data/4HAIE.csv", header=T, sep=";")
 data <- df %>% 
   select(-c(34:42)) %>%
   filter(if_all(all_of(c("qol_1", "qol_2", "Sleep5")), ~ !is.na(.))) %>%
