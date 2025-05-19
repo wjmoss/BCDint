@@ -6,15 +6,20 @@ library(ggplot2)
 ## load the csv file
 # filter non-NA rows and transform time format
 df <- read.csv("data/4HAIE.csv", header=T, sep=";")
+#na_check <- c("qol_1", "qol_2", "stresd_1", "res_1", "Sleep5")
+na_check <- names(df)[c(13:23)]
 data <- df %>% 
+  #filter(if_all(all_of(na_check), ~ !is.na(.))) %>%
+  filter(if_all(everything(), ~ !is.na(.))) %>%
   select(-c(34:42)) %>%
-  filter(if_all(all_of(c("qol_1", "qol_2", "Sleep5")), ~ !is.na(.))) %>%
+  #filter(if_all(all_of(na_check), ~ !is.na(.))) %>%
   mutate_at(vars(9,12), ~ as.POSIXct(. , format = "%m/%d/%Y %H:%M:%S")) %>%
-  mutate(date = as.Date(date))
+  mutate(date = as.Date(date)) %>%
+  mutate(qol_1_t=qnorm((qol_1+1)/102))
 
 ## histograms of some variables
-ggplot(data, aes(x = qol_1)) +
-  geom_histogram(binwidth = 1, fill = "steelblue", color = "black") +
+ggplot(data, aes(x = qol_1_t)) +
+  geom_histogram(binwidth = 0.01, fill = "steelblue", color = "black") +
   theme_minimal()
 
 ggplot(data, aes(x = qol_2)) +
