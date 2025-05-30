@@ -1,5 +1,4 @@
 source("generateModel.R")
-source("ricf_int2.R")
 source("ricf_int.R")
 source("ricf_dg.R")
 
@@ -17,7 +16,7 @@ K <- c(0, 3, 4)
 D <- c(0.2, 0.3)
 
 v <- V[1]
-n <- N[3]
+n <- N[2]
 l <- K[2]
 d <- D[1]
 
