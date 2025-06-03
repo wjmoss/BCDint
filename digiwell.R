@@ -2,7 +2,7 @@ library(dplyr)
 library(tidyverse)
 library(ggplot2)
 library(MASS)
-library(bestNormalize)
+#library(bestNormalize)
 source("ricf_int.R")
 source("ricf_dg.R")
 
@@ -95,20 +95,37 @@ ggplot(data, aes(x = Sleep5)) +
   theme_minimal()
 
 data <- data %>% mutate(activity=factor(activity))
-ggplot(data, aes(x = qol_1, fill = activity)) +
+ggplot(data, aes(x = qol_t, fill = activity)) +
   geom_histogram(position = "identity", alpha = 0.5, bins = 30) +
   theme_minimal()
 
-ggplot(data, aes(x = qol_2, fill = activity)) +
+ggplot(data, aes(x = steps_t, fill = activity)) +
   geom_histogram(position = "identity", alpha = 0.5, bins = 30) +
   theme_minimal()
 
 
+d1_o = filter(data_obs, activity==1)
+d2_o = filter(data_obs, activity==2)
+cor(d1_o$qol, d1_o$steps_t)
+cor(d2_o$qol, d2_o$steps_t)
+cor(d1_o$Intention, d1_o$steps_t)
+cor(d2_o$Intention, d2_o$steps_t)
+sum(d1_o$Intention) / nrow(d1_o)
+sum(d2_o$Intention) / nrow(d2_o)
 
+d1_i = filter(data_int, activity==1)
+d2_i = filter(data_int, activity==2)
+cor(d1_i$qol, d1_i$steps_t)
+cor(d2_i$qol, d2_i$steps_t)
+cor(d1_i$Intention, d1_i$steps_t)
+cor(d2_i$Intention, d2_i$steps_t)
+sum(d1_i$Intention) / nrow(d1_i)
+sum(d2_i$Intention) / nrow(d2_i)
 
 #### cyclic model
 
 ## tranform qol
+# conflict with bestNormalize
 bc <- boxcox(data$qol ~ 1)  # recommends lambda
 lambda <- bc$x[which.max(bc$y)]
 data = data %>% mutate(qol_t = (qol^lambda - 1) / lambda)
@@ -135,6 +152,7 @@ ggplot(data, aes(x = qol_t)) +
 
 normalizer_qol = bestNormalize(data$qol)
 data = data %>% mutate(qol_t = normalizer_qol$x.t)
+normalizer_qol$chosen_transform
 attributes(normalizer_qol)
 class(normalizer_qol)
 methods(class = class(normalizer_qol))
@@ -143,10 +161,13 @@ methods(class = class(normalizer_qol))
 bc <- boxcox(data$steps_wake_daysum ~ 1)  # recommends lambda
 lambda <- bc$x[which.max(bc$y)]
 data = data %>% 
-  mutate(steps_t = (steps_wake_daysum^lambda - 1) / lambda) %>%
-  mutate(steps_t = scale(steps_t))
+  mutate(steps_t = (steps_wake_daysum^lambda - 1) / lambda) #%>%
+  #mutate(steps_t = scale(steps_t))
 ggplot(data, aes(x = steps_t)) +
   geom_histogram(binwidth = (max(x)-min(x))/100, fill = "steelblue", color = "black") +
+  theme_minimal()
+ggplot(data, aes(x = steps_t)) +
+  geom_histogram(binwidth = 10, fill = "steelblue", color = "black") +
   theme_minimal()
 
 
@@ -176,9 +197,25 @@ data = data %>% mutate(sleep_t = normalizer_sleep$x.t)
 
 
 ## data before and after the covid lockdown
-data_before <- data %>% filter(date < as.Date("2020-03-12"))
-data_after <- data %>% filter(date >= as.Date("2020-03-12"))
-
+#data_before <- data %>% filter(date < as.Date("2020-03-12"))
+data_int1 <- data %>% filter(date >= as.Date("2020-03-12") & date <= as.Date("2020-04-30"))
+data_int2 <- data %>% filter(date >= as.Date("2020-10-22") & date <= as.Date("2020-11-22"))
+data_int <- rbind(data_int1, data_int2)
+data_obs <- data %>% 
+  filter(date < as.Date("2020-03-12") | date > as.Date("2020-04-30")) %>%
+  filter(date < as.Date("2020-10-22") | date > as.Date("2020-11-20"))
+#12.03 - 30.04
+#22.10 - 20.11
+dim(data_obs)
+dim(data_int)
+data <- data %>% 
+  mutate(ifint = (date>=as.Date("2020-03-12") & date <= as.Date("2020-04-30")) | 
+           (date>=as.Date("2020-10-22") & date <= as.Date("2020-11-20"))  ) %>%
+  mutate(ifint=factor(ifint))
+ggplot(data, aes(x = steps_t, fill = ifint)) +
+  geom_histogram(position = "identity", alpha = 0.5, bins = 50) +
+  theme_minimal() 
+t.test(data_obs$steps_t, data_int$steps_t )
 
 ## steps -> qol_t -> steps, steps also influenced by lockdown
 Y_o <- dplyr::select(data_before, c(qol_t, steps_t))
@@ -196,8 +233,8 @@ res
 ## model with sleep
 # to do: use 1-lag for sleep?
 # sleep -> qol <-> steps
-Y_o <- dplyr::select(data_before, c(qol_t, steps_t, sleep_t))
-Y_i <- dplyr::select(data_after, c(qol_t, steps_t, sleep_t))
+Y_o <- dplyr::select(data_obs, c(qol_t, steps_t, sleep_t))
+Y_i <- dplyr::select(data_int, c(qol_t, steps_t, sleep_t))
 targets = list(numeric(0), c(2))
 target.length <- c(nrow(Y_o), nrow(Y_i))
 cat(dim(Y_o), dim(Y_i))
@@ -212,6 +249,9 @@ res
 #Recycling array of length 1 in array-vector arithmetic is deprecated.
 #Use c() or as.vector() instead.
 
+## CI
+
+
 
 
 ## model as observational data
@@ -219,9 +259,12 @@ Y <- dplyr::select(data, c(qol_t, steps_t, sleep_t))
 L <- matrix(0, 3, 3)
 L[1,2] = L[2,1] = L[3,1] = 1
 res <- ricf_int_(L = L, data = as.matrix(Y))
+res
 
-
-
+res1 <- ricf_int_(L = L, data = as.matrix(Y_o))
+res2 <- ricf_int_(L = L, data = as.matrix(Y_i))
+res1$Lambdahat
+res2$Lambdahat
 
 
 
