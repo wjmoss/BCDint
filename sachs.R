@@ -73,6 +73,51 @@ res_c <- ricf_int_(L = L,
                  targets = targets,
                  target.length = target.length)
 
+res_c$Lambdahat[3:5, 3:5]
+res_a$Lambdahat[3:5, 3:5]
+(res_c$Lambdahat - res_a$Lambdahat)[3:5, 3:5]
+(res_c$Omegahat - res_a$Omegahat)[3:5]
+
+
+# visualization of the edge weights
+mat <- res_c$Lambdahat
+mat <- res_a$Lambdahat
+
+# Convert matrix to long format
+mat_long <- mat %>%
+  as.data.frame() %>%
+  rownames_to_column("from") %>%
+  pivot_longer(-from, names_to = "to", values_to = "value") %>%
+  mutate(
+    from = factor(from, levels = rownames(mat)),
+    to   = factor(to, levels = colnames(mat)),
+    diagonal = from == to
+  )
+
+ggplot(mat_long, aes(x = to, y = from)) +
+  # Off-diagonal zeros: light gray with border
+  geom_tile(data = mat_long %>% filter(!diagonal & value == 0),
+            fill = "lightgray", color = "gray80") +
+  # Diagonal shading: light gray, no border
+  geom_tile(data = mat_long %>% filter(diagonal),
+            fill = "lightgray", color = NA) + #color = NA in the diagonal geom_tile() removes the border for diagonal cells.
+  # Non-zero off-diagonal entries: red gradient
+  geom_tile(data = mat_long %>% filter(!diagonal & value != 0),
+            aes(fill = abs(value)), color = "gray80") +
+  # Numbers only for non-zero entries
+  geom_text(aes(label = ifelse(value != 0, round(value, 3), "")), size = 3) +
+  # Gradient for non-zero off-diagonal values
+  scale_fill_gradient(low = "white", high = "red") +
+  # Flip y-axis so top row is first protein
+  scale_y_discrete(limits = rev(levels(mat_long$from))) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 10)) +
+  labs(fill = "Abs(Value)", x = "To", y = "From")
+
+
+
+
 ## compute and compare the likelihoods
 compute_llh <- function(res, data, targets, target.length){
   val <- 0
@@ -103,6 +148,11 @@ compute_llh(res_a, combined, targets, target.length)
 compute_llh(res_c, combined, targets, target.length)
 
 
+
+
+
+
+
 ## use the directed part in Drton (2019)
 L <-  matrix(0, 11, 11)
 rownames(L) <- colnames(L) <- names(combined)
@@ -127,6 +177,9 @@ res_c <- ricf_int_(L = L,
                    data = as.matrix(combined), 
                    targets = targets,
                    target.length = target.length)
+
+(res_c$Lambdahat - res_a$Lambdahat)[3:5, 3:5]
+(res_c$Omegahat - res_a$Omegahat)[3:5]
 
 compute_llh(res_a, combined, targets, target.length)
 compute_llh(res_c, combined, targets, target.length)
