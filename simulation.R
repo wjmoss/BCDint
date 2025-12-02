@@ -15,17 +15,19 @@ N <- c(5, 10)
 K <- c(0, 3, 4)
 D <- c(0.2, 0.3)
 
-v <- V[1]
-n <- N[2]
-l <- K[2]
-d <- D[1]
+#v <- V[1]
+#n <- N[2]
+#l <- K[2]
+#d <- D[1]
 
+## rmse
 rss <- function(r, models, List){
   rss <- sum((t(models[[r]]$B.true)-List[[r]]$Lambdahat)^2) + sum((diag(models[[r]]$Omega.true)-List[[r]]$Omegahat)^2)
   num <- sum(models[[r]]$B) + nrow(models[[r]]$Omega)
   return (rss / num)
 }
 
+## log-likelihood distance
 d_llh <- function(r, models, List){
   #sigma <- solve(diag(v) - models[[r]]$B.true) %*% models[[r]]$Omega.true %*% t(solve((diag(v)-models[[r]]$B.true)))
   #K <- t(diag(v) - models[[r]]$B.true) %*% solve(models[[r]]$Omega.true) %*% (diag(v) - models[[r]]$B.true)
@@ -151,12 +153,29 @@ for (v in V){
 }
 
 
-
-tmp=(sapply(1:replicates, rss, List=res_int2))
-ind = which(tmp>10)
-for (r in ind){
-  print(models[[r]]$targets)
-  cat("-----------------")
-  plotGraph(models[[r]]$B)
-  Sys.sleep(10)
+## print the metrics 
+# format:
+# p m/p k d = v n l d
+# conv_agg rss_agg llh_agg t_agg
+# conv_mle rss_mle llh_mle t_mle
+for (v in V){
+  for (n in N){
+    for (l in K){
+      for (d in D){
+        filename = paste0("data/v=",v,"n=",n,"l=",l,"d=",d, "seed=",seed, ".rda")
+        load(filename)
+        llh_mle <- min(sapply(1:repl, d_llh, models=models, List=res_int))
+        llh_agg <- min(sapply(1:repl, d_llh, models=models, List=res_dg_agg))
+        cat(v, n, l, d, "\n")
+        cat(res[1,], "\n")
+        cat(res[2,], "\n")
+        #maxval_i <- max(sapply(res_int, \(x) max(x$Lambdahat)))
+        #maxval_o <- max(sapply(res_dg_agg, \(x) max(x$Lambdahat)))
+        #cat(maxval_i, maxval_o)
+        #rho <- max(sapply(1:repl, \(r) (diag(v)-models[[r]]$B.true) )) 
+        #cat(rho)
+        #cat("\n")
+      }
+    }
+  }
 }

@@ -360,7 +360,7 @@ display: none;
 <h2>Examples of BCDint</h2>
 <pre class="r"><code>## load the R scripts
 source(&quot;generateModel.R&quot;)
-source(&quot;ricf_int2.R&quot;)
+source(&quot;ricf_int.R&quot;)
 source(&quot;ricf_dg.R&quot;)</code></pre>
 <ol style="list-style-type: decimal">
 <li>The 3-cycle</li>
@@ -480,8 +480,8 @@ d1 = mean(sapply(1:replicates, d_llh, List=res_agg))
 d2 = mean(sapply(1:replicates, d_llh, List=res_int))</code></pre>
 <p>The results are summarized in this table.</p>
 <pre><code>##           RMSE   dif-llh time.elapsed
-## Agg 0.09897879 0.2099877         1.16
-## MLE 0.03113050 0.1725223         0.50</code></pre>
+## Agg 0.09897879 0.2099877         1.11
+## MLE 0.03113050 0.1725223         0.43</code></pre>
 </div>
 
 

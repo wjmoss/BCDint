@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r source}
 ## load the R scripts
 source("generateModel.R")
-source("ricf_int2.R")
+source("ricf_int.R")
 source("ricf_dg.R")
 ```
 

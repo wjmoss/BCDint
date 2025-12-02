@@ -56,7 +56,6 @@ G = Numerator[
        1}]]]];
 G;
 
-(*deg=9*)
 GG = GroebnerBasis[
   Join[G, {Det[B]*t - 1, Det[B2]*t2-1}], {t, t2, w1, w2, w3, w4, b21, b24, b32,
    b43, b41}];
