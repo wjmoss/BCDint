@@ -1,6 +1,6 @@
 # BCDint
 
-A small collection of scripts for block-coordinate descent (BCD) algorithms in linear causal models for interventional data.
+A small collection of scripts for block-coordinate descent (BCD) algorithms in linear causal models with interventional data.
 
 ## Algorithms
 - **`ricf_dg.R`**: BCD algorithm (Drton et al., 2019), simplied version for directed graphs (without bidirected edges)  
