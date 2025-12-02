@@ -399,6 +399,8 @@ ricf_int_ <- function(L = NULL, data, targets=NULL, target.length=NULL, Linit = 
   return(list(Sigmahat = sigcur, Bhat = bhat, Omegahat = Ocur, Lambdahat = Lcur, iterations = iter, converged = (iter < maxiter)))
 }
 
+
+## compute the log-likelihood of a covariance matrix S
 llh <- function(obj, S)
 {
   K = (diag(nrow(S))-obj$Lambdahat) %*% (1 / obj$Omegahat * t(diag(nrow(S))-obj$Lambdahat))
@@ -407,6 +409,8 @@ llh <- function(obj, S)
   return (llh)
 }
 
+
+## wrap different initial values for ricf_int_
 ricf_int <- function(L = NULL, data, targets=NULL, target.length=NULL, Linit = NULL, Oinit = NULL, sigconv=TRUE, tol=10^(-6),
                            maxiter=5000, out="none", maxkap = 1e13, B = NULL, restarts = 1)
 {
@@ -431,7 +435,7 @@ ricf_int <- function(L = NULL, data, targets=NULL, target.length=NULL, Linit = N
   
   #(O,I) init
   res_temp[[restarts+1]] <- ricf_int_(L, data, targets, target.length,
-                                      Linit=matrix(0,v,v), Oinit=diag(v))
+                                      Linit=L*0, Oinit=diag(v)) # to keep the names
   llh_temp[restarts+1] <- llh(res_temp[[restarts+1]], cov_obs)
   
   # default init
