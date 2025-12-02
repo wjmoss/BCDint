@@ -4,8 +4,7 @@ A small collection of scripts for block-coordinate descent (BCD) algorithms in l
 
 ## Algorithms
 - **`ricf_dg.R`**: BCD algorithm (Drton et al., 2019), simplied version for directed graphs (without bidirected edges)  
-- **`ricf_int.R`**: Archived old version of the BCD algorithm for interventional data
-- **`ricf_int2.R`**: Current BCD algorithm for interventional data
+- **`ricf_int.R`**: BCD algorithm for interventional data
 
 ## Simulations
 - **`generateModel.R`**: Data generation process used in simulations  
