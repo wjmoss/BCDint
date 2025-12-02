@@ -12,7 +12,7 @@ A small collection of scripts for block-coordinate descent (BCD) algorithms in l
 - **`simulation.R`**: Runs simulation and evaluation for one configuration $(v, n, l, d) = (p, m/p, k, d)$
 
 ## Maximum Likelihood Degree Computation
-- **`ML-deg`**: Mathematica code for computing maximum likelihood degrees:
+- **`ML-deg.txt`**: Mathematica code for computing maximum likelihood degrees:
   - One for **observational data** only
   - One for **observational + interventional data**
 
