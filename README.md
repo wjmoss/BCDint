@@ -3,12 +3,16 @@
 A small collection of scripts for block-coordinate descent (BCD) algorithms in linear causal models with interventional data.
 
 ## Algorithms
-- **`ricf_dg.R`**: BCD algorithm (Drton et al., 2019), simplied version for directed graphs (without bidirected edges)  
+- **`ricf_dg.R`**: BCD algorithm (Drton et al., 2019), simplified version for directed graphs (without bidirected edges)  
 - **`ricf_int.R`**: BCD algorithm for interventional data
 
 ## Simulations
 - **`generateModel.R`**: Data generation process used in simulations  
 - **`simulation.R`**: Runs simulation and evaluation for one configuration $(v, n, l, d) = (p, m/p, k, d)$
+
+- ## Sach dataset
+- **`sachs.R`**: Load protein-signaling datasets from Sachs et al., 2005, compare the model fits of a DAG model and a cyclic model
+
 
 ## Maximum Likelihood Degree Computation
 - **`ML-deg.txt`**: Mathematica code for computing maximum likelihood degrees:
