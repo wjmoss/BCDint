@@ -10,7 +10,7 @@ A small collection of scripts for block-coordinate descent (BCD) algorithms in l
 - **`generateModel.R`**: Data generation process used in simulations  
 - **`simulation.R`**: Runs simulation and evaluation for one configuration $(v, n, l, d) = (p, m/p, k, d)$
 
-## Sach dataset
+## Sachs data
 - **`sachs.R`**: Load protein-signaling datasets from Sachs et al., 2005, compare the model fits of a DAG model and a cyclic model
 
 ## Maximum Likelihood Degree Computation
