@@ -1,6 +1,6 @@
 # BCDint
 
-A small collection of scripts for block-coordinate descent (BCD) algorithms in linear causal models with interventional data.
+A small collection of scripts for block-coordinate descent (BCD) algorithms in linear causal models with interventional data.  Paper: [link to be added]()
 
 ## Algorithms
 - **`ricf_dg.R`**: BCD algorithm (Drton et al., 2019), simplified version for directed graphs (without bidirected edges)  
@@ -17,6 +17,10 @@ A small collection of scripts for block-coordinate descent (BCD) algorithms in l
 - **`ML-deg.txt`**: Mathematica code for computing maximum likelihood degrees:
   - One for **observational data** only
   - One for **observational + interventional data**
+
+## Plot of a helper function
+- **`plot_f.R`**: R code for generating the plot of the helper function in Lemma A.1.  
+
 
 ## Notes
 - Not a package; just standalone scripts  
