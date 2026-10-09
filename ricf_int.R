@@ -12,6 +12,7 @@
 # out: String: options: None/False, Final, All/True
 # maxkap: maximum condition number accepted before error thrown
 # B: (optional instead of L -- here B = t(L))
+# covariance: unbiased uses cov(); ml uses Y'Y/n for already centered/zero-mean data
 #
 # OUTPUTS ---
 # Sigmahat: the fitted value for Sigma resulting from the algorithm
@@ -20,7 +21,13 @@
 # iterations: the number of iterations run by the algorithm before convergence or divergence accepted
 # converged: TRUE or FALSE - based on whether or not the algorithm converged before maxiter reached
 ricf_int_ <- function(L = NULL, data, targets=NULL, target.length=NULL, Linit = NULL, Oinit = NULL, sigconv=TRUE, tol=10^(-6),
-                      maxiter=5000, out="none", maxkap = 1e13, B = NULL){
+                      maxiter=5000, out="none", maxkap = 1e13, B = NULL,
+                      covariance=c("unbiased", "ml")){
+
+  covariance <- match.arg(covariance)
+  sample_moment <- function(Y) {
+    if (covariance == "ml") crossprod(Y) / nrow(Y) else cov(Y)
+  }
 
   ## parameter validations
   # matrices
@@ -43,7 +50,7 @@ ricf_int_ <- function(L = NULL, data, targets=NULL, target.length=NULL, Linit = 
     stop("L must be a square matrix!")
   p <- nrow(L)
   O <- rep(1, p)
-  S <- cov(data)
+  S <- sample_moment(data)
 
   #targets
   if (is.null(targets) || is.null(target.length)){
@@ -194,9 +201,9 @@ ricf_int_ <- function(L = NULL, data, targets=NULL, target.length=NULL, Linit = 
 
     # compute the covariance matrix w.r.t. valid data rows
     if (length(ind) == 0){
-      cov_list[[i]] <- cov(data)
+      cov_list[[i]] <- sample_moment(data)
     } else{
-      cov_list[[i]] <- cov(data[-ind, ])
+      cov_list[[i]] <- sample_moment(data[-ind, , drop=FALSE])
     }
 
     # check scc in intervened graphs and compute n1, n2
@@ -385,10 +392,11 @@ ricf_int_ <- function(L = NULL, data, targets=NULL, target.length=NULL, Linit = 
 
     else {
 
-      #rows <- rows_i[[1]]
-      S = cov(data[rows, , drop=FALSE])
+      S = cov_list[[1]]
+      if (!is.finite(S[1, 1]) || S[1, 1] <= 0)
+        stop("Single-variable fitting requires positive variance in valid data")
       sigcur = as.matrix(S[p, p])
-      bhat = as.matrix(0)
+      bhat = as.matrix(1)
       Ocur = S[p, p]
       Lcur = as.matrix(0)
       iter = 1
@@ -396,7 +404,7 @@ ricf_int_ <- function(L = NULL, data, targets=NULL, target.length=NULL, Linit = 
     }
 
   }
-  return(list(Sigmahat = sigcur, Bhat = bhat, Omegahat = Ocur, Lambdahat = Lcur, iterations = iter, converged = (iter < maxiter)))
+  return(list(Sigmahat = sigcur, Bhat = bhat, Omegahat = Ocur, Lambdahat = Lcur, iterations = iter, converged = (p == 1 || iter < maxiter)))
 }
 
 
@@ -410,44 +418,69 @@ llh <- function(obj, S)
 }
 
 
-## wrap different initial values for ricf_int_
-ricf_int <- function(L = NULL, data, targets=NULL, target.length=NULL, Linit = NULL, Oinit = NULL, sigconv=TRUE, tol=10^(-6),
-                           maxiter=5000, out="none", maxkap = 1e13, B = NULL, restarts = 1)
-{
-  res_temp <- list()
-  llh_temp <- c()
-  v <- nrow(L)
-  if (is.null(targets) || is.null(target.length)){
-    #all observation data
-    cov_obs <- cov(data)
-  } else{
-    ind <- c(1:target.length[1])
-    cov_obs <- cov(data[ind, ])
+# Environment-weighted score; constants and the 1/2 are omitted.
+# ml uses Y'Y/n for zero-mean data; unbiased retains legacy cov() normalization.
+llh_int <- function(obj, data, targets=NULL, target.length=NULL,
+                    covariance=c("unbiased", "ml")) {
+  covariance <- match.arg(covariance)
+  data <- as.matrix(data)
+  p <- ncol(data)
+  if (is.null(targets) || is.null(target.length)) {
+    targets <- list(numeric(0))
+    target.length <- nrow(data)
   }
-  
-  
-  # random inits
-  for (i in 1:restarts){
-    res_temp[[i]] <- ricf_int_(L, data, targets, target.length, 
-                               Linit=matrix(runif(v^2,-1,1),v,v)*L, Oinit=runif(v,0,1))
-    llh_temp[i] <- llh(res_temp[[i]], cov_obs)
+  if (length(targets) != length(target.length) ||
+      any(!is.finite(target.length) | target.length < 2 | target.length %% 1 != 0) ||
+      sum(target.length) != nrow(data))
+    stop("Each environment must have at least two rows and matching counts")
+  offsets <- c(0, cumsum(target.length))
+  value <- 0
+  for (k in seq_along(targets)) {
+    target <- targets[[k]]
+    L <- obj$Lambdahat
+    L[, target] <- 0
+    O <- obj$Omegahat
+    Y <- data[seq.int(offsets[k]+1, offsets[k+1]), , drop=FALSE]
+    S <- if (covariance == "ml") crossprod(Y) / nrow(Y) else cov(Y)
+    O[target] <- diag(S)[target]
+    if (any(!is.finite(O) | O <= 0)) return(-Inf)
+    A <- diag(p) - L
+    K <- A %*% (1 / O * t(A))
+    value <- value + nrow(Y) * (-sum(log(O)) +
+      2 * as.numeric(determinant(A, logarithm=TRUE)$modulus) - sum(K * t(S)))
   }
-  
-  #(O,I) init
-  res_temp[[restarts+1]] <- ricf_int_(L, data, targets, target.length,
-                                      Linit=L*0, Oinit=diag(v)) # to keep the names
-  llh_temp[restarts+1] <- llh(res_temp[[restarts+1]], cov_obs)
-  
-  # default init
-  res_temp[[restarts+2]] <- ricf_int_(L, data, targets, target.length)
-  llh_temp[restarts+2] <- llh(res_temp[[restarts+2]], cov_obs)
-  
-  ind <- which.max(llh_temp)
-  #return (list(res=res_temp, llh=llh_temp))
-  return (res_temp[[ind]])
+  value
 }
 
-#r=1000
-#a1<- ricf_int(L=t(models[[r]]$B), data=t(models[[r]]$Y), targets=models[[r]]$targets, target.length=models[[r]]$target.length)
-#View(a1)
-
+# Compare starts using all environments, and forward the solver controls.
+ricf_int <- function(L=NULL, data, targets=NULL, target.length=NULL,
+                     Linit=NULL, Oinit=NULL, sigconv=TRUE, tol=1e-6,
+                     maxiter=5000, out="none", maxkap=1e13, B=NULL, restarts=1,
+                     covariance=c("unbiased", "ml")) {
+  covariance <- match.arg(covariance)
+  if (is.null(L)) {
+    if (!is.matrix(B)) stop("Supply a matrix L or B")
+    L <- t(B)
+  }
+  v <- nrow(L)
+  if (length(restarts) != 1 || !is.finite(restarts) || restarts < 0 ||
+      restarts %% 1 != 0) stop("restarts must be a nonnegative integer")
+  starts <- lapply(seq_len(restarts), function(i)
+    list(Linit=matrix(runif(v*v,-1,1),v,v)*L, Oinit=runif(v,0,1)))
+  starts <- c(starts, list(list(Linit=L*0, Oinit=diag(v)),
+                          list(Linit=Linit, Oinit=Oinit)))
+  fits <- lapply(starts, function(start) ricf_int_(
+    L=L, data=data, targets=targets, target.length=target.length,
+    Linit=start$Linit, Oinit=start$Oinit, sigconv=sigconv, tol=tol,
+    maxiter=maxiter, out=out, maxkap=maxkap, covariance=covariance))
+  scores <- vapply(fits, llh_int, numeric(1), data=data,
+                   targets=targets, target.length=target.length, covariance=covariance)
+  if (!any(is.finite(scores))) stop("No finite joint score among initializations")
+  selected <- which.max(scores)
+  result <- fits[[selected]]
+  result$restart_scores <- scores
+  result$selected_restart <- selected
+  result$joint_score <- scores[selected]
+  result$covariance <- covariance
+  result
+}

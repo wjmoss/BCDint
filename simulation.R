@@ -9,7 +9,11 @@ source("ricf_dg.R")
 # n: multiple of sample size to graph size
 # l: length of the unique cycle
 # d: probability of filling an edge between two nodes
-repl <- 1000
+# The full study defaults to 1000; the isolated smoke test overrides this count.
+repl <- suppressWarnings(as.numeric(Sys.getenv("BCD_REPL", "1000")))
+if (!is.finite(repl) || repl < 1 || repl %% 1 != 0 || repl > .Machine$integer.max)
+  stop("BCD_REPL must be a positive integer")
+repl <- as.integer(repl)
 V <- c(5, 10)
 N <- c(5, 10)
 K <- c(0, 3, 4)
@@ -29,6 +33,7 @@ rss <- function(r, models, List){
 
 ## log-likelihood distance
 d_llh <- function(r, models, List){
+  v <- nrow(models[[r]]$B.true)
   #sigma <- solve(diag(v) - models[[r]]$B.true) %*% models[[r]]$Omega.true %*% t(solve((diag(v)-models[[r]]$B.true)))
   #K <- t(diag(v) - models[[r]]$B.true) %*% solve(models[[r]]$Omega.true) %*% (diag(v) - models[[r]]$B.true)
   K = (diag(v)-List[[r]]$Lambdahat) %*% (1 / List[[r]]$Omegahat * t(diag(v)-List[[r]]$Lambdahat))
@@ -39,6 +44,7 @@ d_llh <- function(r, models, List){
 }
 
 run_vnl <- function(v, n, l, d=0.2, seed = 0, repl = 1000){
+  dir.create("data", recursive=TRUE, showWarnings=FALSE)
   set.seed(seed)
   graphs <- list()
   models <- list()
@@ -142,7 +148,7 @@ for (v in V){
   for (n in N){
     for (l in K){
       for (d in D){
-        run_vnl(v, n, l, d=d, seed=seed, repl=1000)
+        run_vnl(v, n, l, d=d, seed=seed, repl=repl)
         cat(v,n,l,d)
         cat("\n")
         #filename = paste0("v=",v,"n=",n,"l=",l,"d=",d, "seed=",seed)

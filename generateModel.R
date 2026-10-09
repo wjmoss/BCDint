@@ -199,7 +199,23 @@ generateGraph <- function(v, n=NULL, l, d, b=0, scc_constraint=T, acy_constraint
   return (list(B = B, Omega = Omega))
 }
 
-generateData <- function(B, Omega, targets=NULL, target.length=NULL, errorDist = "gauss", errorInt="gauss", det_constraint=0.01){
+generateData <- function(B, Omega, targets=NULL, target.length=NULL, errorDist = "gauss", errorInt="gauss", det_constraint=0.01, n=NULL){
+  v <- nrow(B)
+  # n supplies a common sample count when environment-specific counts are absent.
+  if (is.null(target.length)) {
+    if (is.null(n) || length(n) != 1 || !is.finite(n) || n < 1 || n %% 1 != 0)
+      stop("Supply target.length, or a positive integer n")
+    if (is.null(targets)) targets <- list(numeric(0))
+    target.length <- rep(n, length(targets))
+  }
+  if (is.null(targets)) {
+    if (length(target.length) != 1)
+      stop("Supply targets for multiple environments")
+    targets <- list(numeric(0))
+  }
+  if (length(targets) != length(target.length) || length(target.length) == 0 ||
+      any(!is.finite(target.length) | target.length < 1 | target.length %% 1 != 0))
+    stop("Invalid environment sample counts")
   # repeat until det(I-B.true) > det_constraint
   repeat {
     # Sample edge weights as given in the paper
@@ -216,10 +232,6 @@ generateData <- function(B, Omega, targets=NULL, target.length=NULL, errorDist =
   data <- list()
   Y <- NULL
   Sigmas <- list()
-  if (is.null(targets) || is.null(target.length)){
-    targets = list(numeric(0))
-    target.length = (n)
-  }
   
   for (k in 1:length(target.length)){
     tar <- targets[[k]]

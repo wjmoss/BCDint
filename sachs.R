@@ -4,6 +4,8 @@ library(tidyverse)
 library(MASS)
 library(ggplot2)
 library(SEMgraph) # for sachs data
+data("sachs", package="SEMgraph")
+set.seed(1)
 source("ricf_int.R")
 source("ricf_dg.R")
 
@@ -63,7 +65,8 @@ targets <- list(numeric(0), c(7), c(9), c(4), c(2))
 res_a <- ricf_int(L = L,
                  data = as.matrix(combined), 
                  targets = targets,
-                 target.length = target.length)
+                 target.length = target.length,
+                 covariance = "ml")
 
 # cyclic graph
 L[5, 4] <- 0
@@ -71,7 +74,8 @@ L[4, 5] <- 1
 res_c <- ricf_int(L = L,
                  data = as.matrix(combined), 
                  targets = targets,
-                 target.length = target.length)
+                 target.length = target.length,
+                 covariance = "ml")
 
 res_c$Lambdahat[3:5, 3:5]
 res_a$Lambdahat[3:5, 3:5]
@@ -123,29 +127,9 @@ plotL(res_a$Lambdahat)
 
 
 ## compute and compare the likelihoods
-compute_llh <- function(res, data, targets, target.length){
-  val <- 0
-  
-  v <- ncol(data)
-  ind <- c(0, cumsum(target.length))
-  for (k in seq_along(targets)){
-    target <- targets[[k]]
-    L <- res$Lambdahat
-    L[, target] <- 0
-    O <- res$Omegahat
-    
-    data_tmp <- data[(ind[k]+1):ind[k+1], ]
-    for (i in target){
-      O[i] <- var(data_tmp[, i])
-    }
-    
-    Sigma <- cov(data_tmp)
-    K <- (diag(v) - res$Lambdahat) %*% (1 / O * t(diag(v)-L))
-    tr <- sum( c(K) * c(t(Sigma)) )
-    val <- val + (-sum(log(O)) + log(det(diag(v)-L) ^ 2) - tr) * target.length[k]
-  }
-  
-  return (val)
+# The shared score uses the intervened coefficient matrix in both precision factors.
+compute_llh <- function(res, data, targets, target.length) {
+  llh_int(res, data, targets, target.length, covariance="ml")
 }
 
 compute_llh(res_a, combined, targets, target.length)
@@ -172,7 +156,8 @@ L[9, c(1,10,11)] <- 1
 res_a <- ricf_int(L = L,
                   data = as.matrix(combined), 
                   targets = targets,
-                  target.length = target.length)
+                  target.length = target.length,
+                 covariance = "ml")
 
 # cyclic graph
 L[5, 4] <- 0
@@ -180,7 +165,8 @@ L[4, 5] <- 1
 res_c <- ricf_int(L = L,
                    data = as.matrix(combined), 
                    targets = targets,
-                   target.length = target.length)
+                   target.length = target.length,
+                 covariance = "ml")
 
 (res_c$Lambdahat - res_a$Lambdahat)[3:5, 3:5]
 (res_c$Omegahat - res_a$Omegahat)[3:5]

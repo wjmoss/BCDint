@@ -27,8 +27,8 @@ N[Eigenvalues[S2]]
 
 
 (*compute the equivalent log-likelihood (constant omitted)*)
-ell1 = Simplify[Log[Det[Sigma1]] - Tr[Inverse[Sigma1].S1]];
-ell2 = Simplify[Log[Det[Sigma2]] - Tr[Inverse[Sigma2].S2]];
+ell1 = Simplify[-Log[Det[Sigma1]] - Tr[Inverse[Sigma1].S1]];
+ell2 = Simplify[-Log[Det[Sigma2]] - Tr[Inverse[Sigma2].S2]];
 a1=RandomInteger[100]+1;
 a2=RandomInteger[100]+1;
 ell=a1*ell1+a2*ell2;
