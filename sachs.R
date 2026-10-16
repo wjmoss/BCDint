@@ -52,6 +52,7 @@ L[6, 7] <- 1
 L[8, c(1,2,6,7,10,11)] <- 1
 L[9, c(1,2,8,10,11)] <- 1
 sum(L)
+L_main_dag <- L
 
 ## data1: null ()
 ## data3: akt (7)
@@ -63,19 +64,19 @@ targets <- list(numeric(0), c(7), c(9), c(4), c(2))
 
 ## run BCDint
 res_a <- ricf_int(L = L,
-                 data = as.matrix(combined), 
-                 targets = targets,
-                 target.length = target.length,
-                 covariance = "ml")
+                  data = as.matrix(combined), 
+                  targets = targets,
+                  target.length = target.length,
+                  covariance = "ml")
 
 # cyclic graph
 L[5, 4] <- 0
 L[4, 5] <- 1
 res_c <- ricf_int(L = L,
-                 data = as.matrix(combined), 
-                 targets = targets,
-                 target.length = target.length,
-                 covariance = "ml")
+                  data = as.matrix(combined), 
+                  targets = targets,
+                  target.length = target.length,
+                  covariance = "ml")
 
 res_c$Lambdahat[3:5, 3:5]
 res_a$Lambdahat[3:5, 3:5]
@@ -110,7 +111,7 @@ plotL <- function(mat){
     geom_tile(data = mat_long %>% filter(!diagonal & value != 0),
               aes(fill = abs(value)), color = "gray80") +
     # Numbers only for non-zero entries
-    geom_text(aes(label = ifelse(value != 0, round(value, 3), "")), size = 3) +
+    geom_text(aes(label = ifelse(value != 0, sprintf("%.3f", value), "")), size = 3) +
     # Gradient for non-zero off-diagonal values
     scale_fill_gradient(low = "white", high = "red") +
     # Flip y-axis so top row is first protein
@@ -137,10 +138,6 @@ compute_llh(res_c, combined, targets, target.length)
 
 
 
-
-
-
-
 ## use the directed part in Drton (2019)
 L <-  matrix(0, 11, 11)
 rownames(L) <- colnames(L) <- names(combined)
@@ -157,16 +154,16 @@ res_a <- ricf_int(L = L,
                   data = as.matrix(combined), 
                   targets = targets,
                   target.length = target.length,
-                 covariance = "ml")
+                  covariance = "ml")
 
 # cyclic graph
 L[5, 4] <- 0
 L[4, 5] <- 1
 res_c <- ricf_int(L = L,
-                   data = as.matrix(combined), 
-                   targets = targets,
-                   target.length = target.length,
-                 covariance = "ml")
+                  data = as.matrix(combined), 
+                  targets = targets,
+                  target.length = target.length,
+                  covariance = "ml")
 
 (res_c$Lambdahat - res_a$Lambdahat)[3:5, 3:5]
 (res_c$Omegahat - res_a$Omegahat)[3:5]
