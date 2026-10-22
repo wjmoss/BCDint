@@ -150,7 +150,7 @@ L[4, 9] <- 1
 L[5, c(3,4,7)] <- 1
 L[8, c(1,6,7,10,11)] <- 1
 L[9, c(1,10,11)] <- 1
-res_a <- ricf_int(L = L,
+res_a_1 <- ricf_int(L = L,
                   data = as.matrix(combined), 
                   targets = targets,
                   target.length = target.length,
@@ -159,15 +159,15 @@ res_a <- ricf_int(L = L,
 # cyclic graph
 L[5, 4] <- 0
 L[4, 5] <- 1
-res_c <- ricf_int(L = L,
+res_c_1 <- ricf_int(L = L,
                   data = as.matrix(combined), 
                   targets = targets,
                   target.length = target.length,
                   covariance = "ml")
 
-(res_c$Lambdahat - res_a$Lambdahat)[3:5, 3:5]
-(res_c$Omegahat - res_a$Omegahat)[3:5]
+(res_c_1$Lambdahat - res_a_1$Lambdahat)[3:5, 3:5]
+(res_c_1$Omegahat - res_a_1$Omegahat)[3:5]
 
-compute_llh(res_a, combined, targets, target.length)
-compute_llh(res_c, combined, targets, target.length)
+compute_llh(res_a_1, combined, targets, target.length)
+compute_llh(res_c_1, combined, targets, target.length)
 
